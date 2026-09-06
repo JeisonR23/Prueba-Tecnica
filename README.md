@@ -25,6 +25,18 @@ desde **Git Bash** — PowerShell no trae `openssl`.
 Estos archivos (`*.pem`) están en `.gitignore` a propósito: no se versionan, cada quien
 los genera en su máquina.
 
+Lo mismo con el secreto de la Basic Auth entre servicios: copia el ejemplo en cada
+microservicio y pon el **mismo** valor en los dos.
+
+```bash
+cp ms-profile-crud/.env.example ms-profile-crud/.env
+cp ms-profile-query/.env.example ms-profile-query/.env
+# edita ambos .env y define INTERNAL_CLIENT_SECRET con el mismo valor
+```
+
+Los `.env` están en `.gitignore`. Quarkus los lee solo (dev y test); en Kubernetes el
+valor llega desde un Secret.
+
 ## Cómo correrlo local
 
 1. `docker compose up -d` — levanta Mongo en `localhost:27017`.
@@ -157,8 +169,12 @@ Solo los llama `ms-profile-query`. Protegidos con **Basic Auth** (el par
 
 ```http
 GET https://localhost:8444/internal/profile/search?email=jeison@example.com
-Authorization: Basic bXMtcHJvZmlsZS1xdWVyeTpscGIrYmJYWDg5WExnSmJMcmJSRm81ck5zZjRBYjU2bA==
+Authorization: Basic <base64(clientId:secret)>
 ```
+
+El `clientId` es `ms-profile-query` y el `secret` es el valor de
+`INTERNAL_CLIENT_SECRET`. En la práctica esto lo arma `ms-profile-query` solo
+(`BasicAuthClientFilter`); rara vez lo llamas a mano.
 
 ---
 
@@ -223,6 +239,8 @@ esté corriendo:
 
 - `ms-profile-crud` levanta contra Mongo (asegúrate de tener `docker compose up -d`).
 - `ms-profile-query` mockea el cliente REST hacia `ms-profile-crud` y simula el JWT.
+
+Los dos necesitan su `.env` con `INTERNAL_CLIENT_SECRET` (ver "Antes de arrancar").
 
 ## Kubernetes
 
