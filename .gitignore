@@ -1,0 +1,21 @@
+# Java / Maven
+target/
+*.class
+
+# Quarkus
+.quarkus/
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# OS
+.DS_Store
+
+# Llaves - nunca se suben, se generan local
+keys/privateKey.pem
+keys/publicKey.pem
+**/src/main/resources/privateKey.pem
+**/src/main/resources/publicKey.pem
+**/src/main/resources/tls/
