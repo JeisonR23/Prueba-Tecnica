@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-profile-crud
+  labels:
+    app: ms-profile-crud
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ms-profile-crud
+  template:
+    metadata:
+      labels:
+        app: ms-profile-crud
+    spec:
+      containers:
+        - name: ms-profile-crud
+          image: ms-profile-crud:v3
+          ports:
+            - containerPort: 8444
+              name: https
+          env:
+            - name: MONGO_URI
+              value: "mongodb://mongo:27017"
+            - name: INTERNAL_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: internal-api-key
+                  key: client-secret
+          volumeMounts:
+            - name: jwt-keys
+              mountPath: /deployments/certs/jwt
+              readOnly: true
+            - name: tls-certs
+              mountPath: /deployments/certs/tls
+              readOnly: true
+          readinessProbe:
+            tcpSocket:
+              port: 8444
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8444
+            initialDelaySeconds: 10
+            periodSeconds: 20
+      volumes:
+        - name: jwt-keys
+          secret:
+            secretName: jwt-keys
+        - name: tls-certs
+          secret:
+            secretName: tls-ms-profile-crud
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-profile-crud
+spec:
+  selector:
+    app: ms-profile-crud
+  ports:
+    - name: https
+      port: 8444
+      targetPort: 8444
+  type: ClusterIP

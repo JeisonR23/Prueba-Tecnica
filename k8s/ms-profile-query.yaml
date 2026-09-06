@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-profile-query
+  labels:
+    app: ms-profile-query
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ms-profile-query
+  template:
+    metadata:
+      labels:
+        app: ms-profile-query
+    spec:
+      containers:
+        - name: ms-profile-query
+          image: ms-profile-query:v2
+          ports:
+            - containerPort: 8445
+              name: https
+          env:
+            - name: INTERNAL_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: internal-api-key
+                  key: client-secret
+          volumeMounts:
+            - name: jwt-public-key
+              mountPath: /deployments/certs/jwt
+              readOnly: true
+            - name: tls-certs
+              mountPath: /deployments/certs/tls
+              readOnly: true
+          readinessProbe:
+            tcpSocket:
+              port: 8445
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8445
+            initialDelaySeconds: 10
+            periodSeconds: 20
+      volumes:
+        - name: jwt-public-key
+          secret:
+            secretName: jwt-keys
+            items:
+              - key: publicKey.pem
+                path: publicKey.pem
+        - name: tls-certs
+          secret:
+            secretName: tls-ms-profile-query
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-profile-query
+spec:
+  selector:
+    app: ms-profile-query
+  ports:
+    - name: https
+      port: 8445
+      targetPort: 8445
+  type: ClusterIP
