@@ -16,13 +16,23 @@ spec:
     spec:
       containers:
         - name: ms-profile-crud
-          image: ms-profile-crud:v3
+          image: ms-profile-crud:v4
           ports:
             - containerPort: 8444
               name: https
           env:
+            - name: MONGO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-credentials
+                  key: username
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-credentials
+                  key: password
             - name: MONGO_URI
-              value: "mongodb://mongo:27017"
+              value: "mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@mongo:27017/?authSource=admin"
             - name: INTERNAL_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
