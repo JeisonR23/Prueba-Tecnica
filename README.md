@@ -256,11 +256,12 @@ activado, o Minikube) — confírmalo con `kubectl get nodes`.
    ```
    (en PowerShell, las comillas alrededor de cada `-D` son necesarias)
 2. Crea los Secrets:
-   ```bash
+```bash
    cd k8s
    export INTERNAL_CLIENT_SECRET=$(openssl rand -base64 24)
+   export MONGO_PASSWORD=$(openssl rand -base64 24)
    ./create-secrets.sh
-   ```
+```
 3. Aplica los manifiestos — **el de Mongo primero**, los dos microservicios lo
    necesitan corriendo dentro del clúster para arrancar:
    ```powershell
